@@ -1,6 +1,6 @@
 import unittest
 
-from textnode import TextNode, TextType, text_node_to_html_node
+from textnode import TextNode, TextType, text_node_to_html_node, split_nodes_delimiter
 
 
 class TestTextNode(unittest.TestCase):
@@ -61,6 +61,40 @@ class TestTextNode(unittest.TestCase):
         self.assertEqual(html_node.tag, 'img')
         self.assertEqual(html_node.value, "")
         self.assertEqual(html_node.props, {'src': 'helloworld.png', 'alt': 'This is a image text node'})
+
+    def test_delimeter_code(self):
+        node = TextNode('This is text with a `code block` word', TextType.TEXT_PLAIN)
+        new_nodes = split_nodes_delimiter([node], '`', TextType.TEXT_CODE)
+        self.assertEqual(new_nodes, [TextNode("This is text with a ", TextType.TEXT_PLAIN),
+                                     TextNode("code block", TextType.TEXT_CODE),
+                                     TextNode(" word", TextType.TEXT_PLAIN),
+                                    ])
+        
+    def test_delim_bold_multiword(self):
+        node = TextNode(
+            'This is text with a **bolded word** and **another**', TextType.TEXT_PLAIN
+        )
+        new_nodes = split_nodes_delimiter([node], '**', TextType.TEXT_BOLD)
+        self.assertListEqual(new_nodes, 
+            [
+                TextNode('This is text with a ', TextType.TEXT_PLAIN),
+                TextNode('bolded word', TextType.TEXT_BOLD),
+                TextNode(' and ', TextType.TEXT_PLAIN),
+                TextNode('another', TextType.TEXT_BOLD),
+            ]
+        )
+
+    def test_delim_bold_and_italic(self):
+        node = TextNode('**bold** and _italic_', TextType.TEXT_PLAIN)
+        new_nodes = split_nodes_delimiter([node], '**', TextType.TEXT_BOLD)
+        new_nodes = split_nodes_delimiter(new_nodes, '_', TextType.TEXT_ITALIC)
+        self.assertListEqual(new_nodes, 
+            [
+                TextNode('bold', TextType.TEXT_BOLD),
+                TextNode(' and ', TextType.TEXT_PLAIN),
+                TextNode('italic', TextType.TEXT_ITALIC),
+            ]
+        )
 
 if __name__ == "__main__":
     unittest.main()

@@ -23,7 +23,7 @@ class TextNode:
         return f'TextNode({self.text}, {self.text_type}, {self.url})'
     
 def text_node_to_html_node(text_node):
-    match (text_node.text_type):
+    match text_node.text_type:
         case TextType.TEXT_PLAIN:
             return LeafNode(None, text_node.text, None)
         case TextType.TEXT_BOLD:
@@ -38,3 +38,23 @@ def text_node_to_html_node(text_node):
             return LeafNode('img', '', {'src': text_node.url, 'alt': text_node.text})
         case _:
             raise Exception('unknown TextType')
+
+def split_nodes_delimiter(old_nodes, delimiter, text_type):
+    new_nodes = []
+    for node in old_nodes:
+        if node.text_type != TextType.TEXT_PLAIN:
+            new_nodes.append(node)
+            continue
+        nodes_to_add = []
+        split_node = node.text.split(delimiter)
+        if len(split_node) % 2 == 0:
+            raise Exception('Wrong number of delimeters')
+        for i in range(len(split_node)):
+            if split_node[i] == '':
+                continue
+            if i % 2 == 0:
+                nodes_to_add.append(TextNode(split_node[i], TextType.TEXT_PLAIN))
+            else:
+                nodes_to_add.append(TextNode(split_node[i], text_type))
+        new_nodes.extend(nodes_to_add)
+    return new_nodes
