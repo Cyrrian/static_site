@@ -65,3 +65,41 @@ def extract_markdown_images(text):
 
 def extract_markdown_links(text):
     return re.findall(r'(?<!!)\[(.*?)\]\((.*?)\)', text)
+
+def split_nodes_image(old_nodes):
+    new_nodes = []
+    for node in old_nodes:
+        if node.text_type != TextType.TEXT_PLAIN:
+            new_nodes.append(node)
+            continue
+        image_nodes = extract_markdown_images(node.text)
+        if image_nodes == None:
+            new_nodes.append(node)
+            continue
+        nodes_to_add = []
+        node_text = node.text
+        for image in image_nodes:
+            split_node, node_text = node_text.split(f'![{image[0]}]({image[1]})', 1)
+            nodes_to_add.append(TextNode(split_node, TextType.TEXT_PLAIN))
+            nodes_to_add.append(TextNode(image[0], TextType.TEXT_IMAGE, image[1]))                    
+        new_nodes.extend(nodes_to_add)
+    return new_nodes
+
+def split_nodes_link(old_nodes):
+    new_nodes = []
+    for node in old_nodes:
+        if node.text_type != TextType.TEXT_PLAIN:
+            new_nodes.append(node)
+            continue
+        link_nodes = extract_markdown_links(node.text)
+        if link_nodes == None:
+            new_nodes.append(node)
+            continue
+        nodes_to_add = []
+        node_text = node.text
+        for link in link_nodes:
+            split_node, node_text = node_text.split(f'[{link[0]}]({link[1]})', 1)
+            nodes_to_add.append(TextNode(split_node, TextType.TEXT_PLAIN))
+            nodes_to_add.append(TextNode(link[0], TextType.TEXT_LINK, link[1]))                    
+        new_nodes.extend(nodes_to_add)
+    return new_nodes

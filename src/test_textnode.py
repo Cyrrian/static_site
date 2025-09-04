@@ -1,6 +1,6 @@
 import unittest
 
-from textnode import TextNode, TextType, text_node_to_html_node, split_nodes_delimiter, extract_markdown_images, extract_markdown_links
+from textnode import TextNode, TextType, text_node_to_html_node, split_nodes_delimiter, extract_markdown_images, extract_markdown_links, split_nodes_image, split_nodes_link
 
 
 class TestTextNode(unittest.TestCase):
@@ -107,6 +107,30 @@ class TestTextNode(unittest.TestCase):
     def test_extract_markdown_links(self):
         matches = extract_markdown_links('This is text with a link [to boot dev](https://www.boot.dev) and [to youtube](https://www.youtube.com/@bootdotdev)')
         self.assertListEqual(matches, [('to boot dev', 'https://www.boot.dev'), ('to youtube', 'https://www.youtube.com/@bootdotdev')])
+
+    def test_split_images(self):
+        node = TextNode('This is text with an ![image](https://i.imgur.com/zjjcJKZ.png) and another ![second image](https://i.imgur.com/3elNhQu.png)', TextType.TEXT_PLAIN)
+        new_nodes = split_nodes_image([node])
+        self.assertListEqual(new_nodes,
+            [
+                TextNode('This is text with an ', TextType.TEXT_PLAIN),
+                TextNode('image', TextType.TEXT_IMAGE, 'https://i.imgur.com/zjjcJKZ.png'),
+                TextNode(' and another ', TextType.TEXT_PLAIN),
+                TextNode('second image', TextType.TEXT_IMAGE, 'https://i.imgur.com/3elNhQu.png'),
+            ]
+        )
+
+    def test_split_links(self):
+        node = TextNode('This is text with an [Link](https://www.google.com) and another [Second Link](https://www.boot.dev)', TextType.TEXT_PLAIN)
+        new_nodes = split_nodes_link([node])
+        self.assertListEqual(new_nodes,
+            [
+                TextNode('This is text with an ', TextType.TEXT_PLAIN),
+                TextNode('Link', TextType.TEXT_LINK, 'https://www.google.com'),
+                TextNode(' and another ', TextType.TEXT_PLAIN),
+                TextNode('Second Link', TextType.TEXT_LINK, 'https://www.boot.dev'),
+            ]
+        )
 
 if __name__ == "__main__":
     unittest.main()
