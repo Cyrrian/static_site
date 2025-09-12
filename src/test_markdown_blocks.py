@@ -118,14 +118,15 @@ the **same** even with inline stuff
         )
 
     def test_m2h_quote(self):
-        md = '''>This is a quote block
+        md = '''>This is a quote block.
+>With two lines.
 '''
 
         node = markdown_to_html_node(md)
         html = node.to_html()
         self.assertEqual(
             html,
-            "<div><blockquote>This is a quote block</blockquote></div>",
+            "<div><blockquote>This is a quote block. With two lines.</blockquote></div>",
         )
 
     def test_m2h_ul(self):
@@ -139,6 +140,20 @@ the **same** even with inline stuff
         self.assertEqual(
             html,
             "<div><ul><li>Item 1</li><li>Item 2</li><li>Item 3</li></ul></div>",
+        )
+
+    def test_m2h_ul2(self):
+        md = '''
+- Item 1
+- _Item 2_
+- Item 3
+'''
+
+        node = markdown_to_html_node(md)
+        html = node.to_html()
+        self.assertEqual(
+            html,
+            "<div><ul><li>Item 1</li><li><i>Item 2</i></li><li>Item 3</li></ul></div>",
         )
 
     def test_m2h_ol(self):

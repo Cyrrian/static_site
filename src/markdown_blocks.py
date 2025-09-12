@@ -51,6 +51,85 @@ def block_to_block_type(markdown):
     
 def markdown_to_html_node(markdown):
     blocks = markdown_to_blocks(markdown)
+    html_nodes = []
+    for block in blocks:
+        new_html_node = block_to_html_node(block)
+        html_nodes.append(new_html_node)
+    return ParentNode('div', html_nodes)
+
+def block_to_html_node(block):
+    match block_to_block_type(block):
+        case BlockType.PARAGRAPH:
+            return paragraph_to_html_node(block)
+        case BlockType.HEADING:
+            return heading_to_html_node(block)
+        case BlockType.CODE:
+            return code_to_html_node(block)
+        case BlockType.QUOTE:
+            return quote_to_html_node(block)
+        case BlockType.ORDERED_LIST:
+            return ordered_list_to_html_node(block)
+        case BlockType.UNORDERED_LIST:
+            return unordered_list_to_html_node(block)
+        case _:
+            raise ValueError('unknown block type')
+
+def text_to_html_nodes(text):
+    text_nodes = text_to_textnodes(text)
+    html_nodes = []
+    for text_node in text_nodes:
+        new_html_node = text_node_to_html_node(text_node)
+        html_nodes.append(new_html_node)
+    return html_nodes
+
+def paragraph_to_html_node(block):
+    lines = block.split('\n')
+    paragraph = ' '.join(lines)
+    html_nodes = text_to_html_nodes(paragraph)
+    return ParentNode('p', html_nodes)
+
+def heading_to_html_node(block):
+    h_count = len(re.findall(r'(#{1,6}) .*', block)[0])
+    text = block[h_count + 1:]
+    html_nodes = text_to_html_nodes(text)
+    return ParentNode(f'h{h_count}', html_nodes)
+
+def code_to_html_node(block):
+    code = re.findall(r'```\n*([\S\s]*)```', block)[0]
+    text_node = TextNode(code, TextType.TEXT_CODE)
+    html_nodes = text_node_to_html_node(text_node)
+    return ParentNode('pre', [html_nodes])
+
+def quote_to_html_node(block):
+    lines = block.split('\n')
+    all_lines = []
+    for line in lines:
+        text = re.findall(r'>(.*)', line)[0].strip()
+        all_lines.append(text)
+    joined_lines = " ".join(all_lines)
+    html_nodes = text_to_html_nodes(joined_lines)
+    return ParentNode('blockquote', html_nodes)
+
+def ordered_list_to_html_node(block):
+    items = block.split('\n')
+    html_nodes = []
+    for item in items:
+        text = re.findall(r'\d+\. (.*)', item)[0]
+        new_html_node = text_to_html_nodes(text)
+        html_nodes.append(ParentNode('li', new_html_node))
+    return ParentNode('ol', html_nodes)
+
+def unordered_list_to_html_node(block):
+    items = block.split('\n')
+    html_nodes = []
+    for item in items:
+        text = item[2:]
+        new_html_node = text_to_html_nodes(text)
+        html_nodes.append(ParentNode('li', new_html_node))
+    return ParentNode('ul', html_nodes)
+
+def old_markdown_to_html_node(markdown):
+    blocks = markdown_to_blocks(markdown)
     new_html_nodes = []
     for block in blocks:
         block_type = block_to_block_type(block)

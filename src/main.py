@@ -1,7 +1,8 @@
 import os, shutil
 
 from textnode import TextNode, TextType
-
+from markdown_blocks import markdown_to_html_node
+from htmlnode import HTMLNode
 
 def main():
     public_dir = 'public'
@@ -9,6 +10,8 @@ def main():
 
     clear_public(public_dir)
     copy_files(static_dir, public_dir)
+
+    generate_page('content/index.md', 'template.html', 'public/index.html')
 
 
 def clear_public(dir):
@@ -29,6 +32,39 @@ def copy_files(dir, target):
         else:
             print(f'FILE {item_path}')
             shutil.copy(item_path, target_path)
+    
+def extract_title(markdown):
+    split_md = markdown.split('\n')
+    for line in split_md:
+        if line.startswith('# '):
+            return line[2:]
+    raise Exception('No title found')
+
+def generate_page(from_path, template_path, dest_path):
+    print(f'Generating page from {from_path} to {dest_path} using {template_path}')
+    
+    with open(from_path) as file:
+        markdown = file.read()
+        file.close()
+    with open(template_path) as file:
+        template = file.read()
+        file.close
+    
+    title = extract_title(markdown)
+    html_nodes = markdown_to_html_node(markdown)
+    html = html_nodes.to_html()
+
+    template = template.replace('{{ Title }}', title)
+    template = template.replace('{{ Content }}', html)
+
+    path = os.path.dirname(dest_path)
+    if os.path.exists(path) != True:
+        os.makedirs(path)
+
+    with open(dest_path, 'w') as file:
+        file.write(template)
+        file.close
+
 
 if __name__ == "__main__":
     main()
