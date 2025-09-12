@@ -7,11 +7,13 @@ from htmlnode import HTMLNode
 def main():
     public_dir = 'public'
     static_dir = 'static'
+    content_dir = 'content'
 
     clear_public(public_dir)
     copy_files(static_dir, public_dir)
 
-    generate_page('content/index.md', 'template.html', 'public/index.html')
+    #generate_page('content/index.md', 'template.html', 'public/index.html')
+    generate_pages_recursive(content_dir, 'template.html', public_dir)
 
 
 def clear_public(dir):
@@ -65,6 +67,19 @@ def generate_page(from_path, template_path, dest_path):
         file.write(template)
         file.close
 
+def generate_pages_recursive(dir_path_content, template_path, dest_dir_path):
+    path_contents = os.listdir(dir_path_content)
+    for path in path_contents:
+        full_content_path = os.path.join(dir_path_content, path)
+        full_target_path = os.path.join(dest_dir_path, path)
+        if os.path.isfile(full_content_path):
+            if full_content_path.endswith('.md'):
+               full_target_path = full_target_path[:-3] + '.html'
+               generate_page(full_content_path, template_path, full_target_path)
+        else:
+            if os.path.exists(full_target_path) != True:
+                os.makedirs(full_target_path)
+            generate_pages_recursive(full_content_path, template_path, full_target_path)
 
 if __name__ == "__main__":
     main()
